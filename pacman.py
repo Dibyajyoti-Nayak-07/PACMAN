@@ -3,8 +3,8 @@ import random
 from collections import deque
 import heapq
 
-GRID_SIZE = 5
-CELL_SIZE = 100
+GRID_SIZE = 10
+CELL_SIZE = 50
 FPS = 10
 
 WHITE = (255, 255, 255)
@@ -15,16 +15,22 @@ RED = (255, 0, 0)
 
 
 grid = [
-    [0, 0, 0, 1, 0],
-    [1, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 1, 1, 1, 1, 0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
 ]
+
 
 # Directions for movement (up, down, left, right)
 directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
+current_path = []
 pygame.init()
 screen = pygame.display.set_mode((GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE))
 pygame.display.set_caption("Pac-Man Game with Pathfinding")
@@ -32,7 +38,7 @@ clock = pygame.time.Clock()
 
 # Pac-Man starting position
 pacman_pos = (0, 0)
-pellets = [(2, 1), (2, 2), (0, 2), (4, 4)]  
+pellets = [(1, 0), (2, 2), (4, 4), (8, 8), (0, 5)]
 score = 0
 
 def is_valid_move(x, y):
@@ -46,7 +52,9 @@ def draw_grid():
             # Draw pellets
             if (x, y) in pellets:
                 pygame.draw.circle(screen, RED, (y * CELL_SIZE + CELL_SIZE // 2, x * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 4)
-
+            # Draw path
+            if (x, y) in current_path:
+                pygame.draw.rect(screen, GREEN, (y * CELL_SIZE, x * CELL_SIZE, CELL_SIZE, CELL_SIZE), width=3)
 def draw_pacman():
     pygame.draw.circle(screen, YELLOW, (pacman_pos[1] * CELL_SIZE + CELL_SIZE // 2, pacman_pos[0] * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 3)
 
@@ -161,8 +169,9 @@ def uniform_cost(start, goal):
     return []  # Return empty path if no path found
 
 def main():
-    global pacman_pos, score
+    global pacman_pos, score, current_path
     running = True
+    pathfinding_in_progress = False  # Track if pathfinding is in progress
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -178,29 +187,33 @@ def main():
                     move_pacman(directions[3])
                 elif event.key == pygame.K_b:  # BFS
                     if pellets:
+                        pathfinding_in_progress = True
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
-                        path = bfs(pacman_pos, target)
-                        if path:
-                            pacman_pos = path[1]  # Move to the next position in the path
+                        current_path = bfs(pacman_pos, target)
+                        pathfinding_in_progress = False  # Reset after pathfinding
+                        if len(current_path) > 1:
+                            pacman_pos = current_path[1]  # Move to the next position in the path
                 elif event.key == pygame.K_d:  # DFS
                     if pellets:
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
-                        path = dfs(pacman_pos, target)
-                        if path:
-                            pacman_pos = path[1]  # Move to the next position in the path
+                        current_path = dfs(pacman_pos, target)
+                        if len(current_path) > 1:
+                            pacman_pos = current_path[1]  # Move to the next position in the path
                 elif event.key == pygame.K_a:  # A*
                     if pellets:
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
-                        path = a_star(pacman_pos, target)
-                        if path:
-                            pacman_pos = path[1]  # Move to the next position in the path
+                        current_path = a_star(pacman_pos, target)
+                        if len(current_path) > 1:
+                            pacman_pos = current_path[1]  # Move to the next position in the path
                 elif event.key == pygame.K_u:  # Uniform Cost
                     if pellets:
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
-                        path = uniform_cost(pacman_pos, target)
-                        if path:
-                            pacman_pos = path[1]  # Move to the next position in the path
-
+                        current_path = uniform_cost(pacman_pos, target)
+                        if len(current_path) > 1:
+                            pacman_pos = current_path[1]  # Move to the next position in the path
+        if current_path and len(current_path) > 1:
+            pacman_pos = current_path[1]  # Move to the next position in the path
+            current_path = current_path[1:]
         screen.fill(BLACK)
         draw_grid()
         draw_pacman()
