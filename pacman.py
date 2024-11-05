@@ -10,8 +10,9 @@ FPS = 10
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
-YELLOW = (255, 255, 0)  # Color for Pac-Man
+YELLOW = (255, 255, 0)  
 RED = (255, 0, 0)
+BLUE = (0,0,255)
 
 
 grid = [
@@ -28,7 +29,7 @@ grid = [
 ]
 
 
-# Directions for movement (up, down, left, right)
+
 directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 current_path = []
 pygame.init()
@@ -87,7 +88,7 @@ def bfs(start, goal):
     while current is not None:
         path.append(current)
         current = parent[current]
-    return path[::-1]  # Return reversed path
+    return path[::-1] 
 
 def dfs(start, goal):
     stack = [start]
@@ -109,7 +110,7 @@ def dfs(start, goal):
     while current is not None:
         path.append(current)
         current = parent[current]
-    return path[::-1]  # Return reversed path
+    return path[::-1]  
 
 def a_star(start, goal):
     open_set = []
@@ -134,7 +135,7 @@ def a_star(start, goal):
                     if neighbor not in [i[1] for i in open_set]:
                         heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
-    return []  # Return empty path if no path found
+    return []  
 
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])  
@@ -144,7 +145,7 @@ def reconstruct_path(came_from, current):
     while current in came_from:
         current = came_from[current]
         total_path.append(current)
-    return total_path[::-1]  # Return reversed path
+    return total_path[::-1]  
 
 def uniform_cost(start, goal):
     priority_queue = [(0, start)]
@@ -166,12 +167,13 @@ def uniform_cost(start, goal):
                     priority_queue.append((new_cost, neighbor))
                     came_from[neighbor] = current
 
-    return []  # Return empty path if no path found
+    return []  
 
 def main():
     global pacman_pos, score, current_path
     running = True
-    pathfinding_in_progress = False  # Track if pathfinding is in progress
+    pathfinding_in_progress = False  
+    path_color = None
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -185,34 +187,42 @@ def main():
                     move_pacman(directions[2])
                 elif event.key == pygame.K_RIGHT:
                     move_pacman(directions[3])
-                elif event.key == pygame.K_b:  # BFS
+                elif event.key == pygame.K_b:  
                     if pellets:
                         pathfinding_in_progress = True
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
                         current_path = bfs(pacman_pos, target)
-                        pathfinding_in_progress = False  # Reset after pathfinding
+                        path_color = GREEN
+                        pathfinding_in_progress = False  
                         if len(current_path) > 1:
-                            pacman_pos = current_path[1]  # Move to the next position in the path
-                elif event.key == pygame.K_d:  # DFS
+                            pacman_pos = current_path[1]  
+                elif event.key == pygame.K_d:  
                     if pellets:
+                        pathfinding_in_progress = True
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
                         current_path = dfs(pacman_pos, target)
+                        path_color = BLUE
+                        pathfinding_in_progress = False
                         if len(current_path) > 1:
-                            pacman_pos = current_path[1]  # Move to the next position in the path
-                elif event.key == pygame.K_a:  # A*
+                            pacman_pos = current_path[1]  
+                elif event.key == pygame.K_a:  
                     if pellets:
+                        pathfinding_in_progress = True
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
                         current_path = a_star(pacman_pos, target)
+                        pathfinding_in_progress = False
                         if len(current_path) > 1:
-                            pacman_pos = current_path[1]  # Move to the next position in the path
-                elif event.key == pygame.K_u:  # Uniform Cost
+                            pacman_pos = current_path[1]  
+                elif event.key == pygame.K_u:  
                     if pellets:
+                        pathfinding_in_progress = True
                         target = min(pellets, key=lambda p: abs(p[0] - pacman_pos[0]) + abs(p[1] - pacman_pos[1]))
                         current_path = uniform_cost(pacman_pos, target)
+                        pathfinding_in_progress = False
                         if len(current_path) > 1:
-                            pacman_pos = current_path[1]  # Move to the next position in the path
+                            pacman_pos = current_path[1] 
         if current_path and len(current_path) > 1:
-            pacman_pos = current_path[1]  # Move to the next position in the path
+            pacman_pos = current_path[1]  
             current_path = current_path[1:]
         screen.fill(BLACK)
         draw_grid()
