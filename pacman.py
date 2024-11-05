@@ -32,7 +32,7 @@ clock = pygame.time.Clock()
 
 # Pac-Man starting position
 pacman_pos = (0, 0)
-pellets = [(1, 0), (2, 1), (2, 2), (0, 2), (4, 4)]  
+pellets = [(2, 1), (2, 2), (0, 2), (4, 4)]  
 score = 0
 
 def is_valid_move(x, y):
